@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { InvitationsModule } from './invitations/invitations.module';
+import { CityModule } from './city/city.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import * as cors from 'cors';
@@ -52,6 +53,7 @@ import * as cors from 'cors';
     UserModule,
     AuthModule,
     InvitationsModule,
+    CityModule,
   ],
   controllers: [AppController],
   providers: [AppService],
