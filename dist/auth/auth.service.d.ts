@@ -13,8 +13,10 @@ export declare class AuthService {
         };
     }>;
     register(username: string, password: string): Promise<{
-        id: number;
+        id: string;
         username: string;
+        email: string;
         highScore: number;
+        createdAt: Date;
     }>;
 }

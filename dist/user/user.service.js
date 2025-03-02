@@ -39,7 +39,7 @@ let UserService = class UserService {
     }
     async updateHighScore(username, score) {
         const user = await this.findByUsername(username);
-        if (user && score > user.highScore) {
+        if (user && (!user.highScore || score > user.highScore)) {
             user.highScore = score;
             await this.userRepository.save(user);
         }

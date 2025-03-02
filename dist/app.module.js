@@ -8,9 +8,10 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
+const typeorm_1 = require("@nestjs/typeorm");
+const config_1 = require("@nestjs/config");
 const user_module_1 = require("./user/user.module");
 const auth_module_1 = require("./auth/auth.module");
-const config_1 = require("@nestjs/config");
 const city_controller_1 = require("./controllers/city.controller");
 const city_service_1 = require("./services/city.service");
 const app_controller_1 = require("./app.controller");
@@ -28,6 +29,24 @@ exports.AppModule = AppModule = __decorate([
         imports: [
             config_1.ConfigModule.forRoot({
                 isGlobal: true,
+            }),
+            typeorm_1.TypeOrmModule.forRootAsync({
+                imports: [config_1.ConfigModule],
+                inject: [config_1.ConfigService],
+                useFactory: (configService) => ({
+                    type: 'postgres',
+                    host: configService.get('DB_HOST', 'localhost'),
+                    port: parseInt(configService.get('DB_PORT', '5432')),
+                    username: configService.get('DB_USERNAME', 'postgres'),
+                    password: configService.get('DB_PASSWORD', 'postgres'),
+                    database: configService.get('DB_DATABASE', 'headout'),
+                    entities: [__dirname + '/**/*.entity{.ts,.js}'],
+                    synchronize: false,
+                    logging: true,
+                    migrationsRun: false,
+                    dropSchema: false,
+                    autoLoadEntities: true,
+                }),
             }),
             database_module_1.DatabaseModule,
             user_module_1.UserModule,
