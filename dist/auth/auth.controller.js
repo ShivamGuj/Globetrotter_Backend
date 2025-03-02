@@ -14,18 +14,36 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
+const passport_1 = require("@nestjs/passport");
 const auth_service_1 = require("./auth.service");
-const local_auth_guard_1 = require("./local-auth.guard");
 const jwt_auth_guard_1 = require("./jwt-auth.guard");
 let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
+        this.logger = new common_1.Logger('AuthController');
     }
     async login(req) {
-        return this.authService.login(req.user);
+        try {
+            this.logger.log('Login attempt successful, generating token');
+            return this.authService.login(req.user);
+        }
+        catch (error) {
+            this.logger.error(`Login error: ${error.message}`);
+            throw new common_1.HttpException('Login failed', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
     async register(body) {
-        return this.authService.register(body.username, body.password);
+        try {
+            this.logger.log(`Registration attempt for username: ${body.username}`);
+            if (!body.username || !body.password) {
+                throw new common_1.HttpException('Username and password are required', common_1.HttpStatus.BAD_REQUEST);
+            }
+            return this.authService.register(body.username, body.password);
+        }
+        catch (error) {
+            this.logger.error(`Registration error: ${error.message}`);
+            throw new common_1.HttpException(error.message || 'Registration failed', common_1.HttpStatus.BAD_REQUEST);
+        }
     }
     getProfile(req) {
         return req.user;
@@ -33,7 +51,7 @@ let AuthController = class AuthController {
 };
 exports.AuthController = AuthController;
 __decorate([
-    (0, common_1.UseGuards)(local_auth_guard_1.LocalAuthGuard),
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('local')),
     (0, common_1.Post)('login'),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),

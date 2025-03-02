@@ -1,15 +1,16 @@
 import { UserService } from './user.service';
 export declare class UserController {
-    private userService;
+    private readonly userService;
     constructor(userService: UserService);
-    findOne(username: string): Promise<{
-        id: string;
+    create(createUserDto: {
         username: string;
-        email: string;
-        highScore: number;
-        createdAt: Date;
-        correctAnswers: number;
-        incorrectAnswers: number;
+        password: string;
+    }): Promise<import("./user.entity").User>;
+    getProfile(req: any): any;
+    findOne(username: string): Promise<import("./user.entity").User>;
+    updateScore(username: string, body: {
+        score: number;
+    }): Promise<{
+        success: boolean;
     }>;
-    getProfile(username: string): Promise<import("./user.entity").User>;
 }

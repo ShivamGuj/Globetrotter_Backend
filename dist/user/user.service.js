@@ -21,27 +21,93 @@ const bcrypt = require("bcrypt");
 let UserService = class UserService {
     constructor(userRepository) {
         this.userRepository = userRepository;
+        this.logger = new common_1.Logger('UserService');
     }
     async findByUsername(username) {
-        return this.userRepository.findOne({ where: { username } });
+        try {
+            this.logger.log(`Finding user by username: ${username}`);
+            const user = await this.userRepository.findOne({
+                where: { username }
+            });
+            if (!user) {
+                this.logger.warn(`User not found: ${username}`);
+                return undefined;
+            }
+            this.logger.log(`User found: ${username}`);
+            return user;
+        }
+        catch (error) {
+            this.logger.error(`Error finding user by username: ${error.message}`);
+            return undefined;
+        }
+    }
+    async findById(id) {
+        try {
+            return await this.userRepository.findOne({
+                where: { id }
+            });
+        }
+        catch (error) {
+            this.logger.error(`Error finding user by ID: ${error.message}`);
+            return undefined;
+        }
     }
     async create(username, password) {
-        const existingUser = await this.findByUsername(username);
-        if (existingUser) {
-            throw new common_1.ConflictException('Username already exists');
+        try {
+            this.logger.log(`Creating user: ${username}`);
+            const existingUser = await this.findByUsername(username);
+            if (existingUser) {
+                this.logger.warn(`Username already exists: ${username}`);
+                throw new common_1.ConflictException('Username already exists');
+            }
+            const hashedPassword = await bcrypt.hash(password, 10);
+            const newUser = this.userRepository.create({
+                username,
+                password: hashedPassword,
+                highScore: 0
+            });
+            const savedUser = await this.userRepository.save(newUser);
+            this.logger.log(`User created successfully: ${username}`);
+            return savedUser;
         }
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const user = this.userRepository.create({
-            username,
-            password: hashedPassword,
-        });
-        return this.userRepository.save(user);
+        catch (error) {
+            this.logger.error(`Error creating user: ${error.message}`);
+            throw error;
+        }
     }
     async updateHighScore(username, score) {
-        const user = await this.findByUsername(username);
-        if (user && (!user.highScore || score > user.highScore)) {
-            user.highScore = score;
-            await this.userRepository.save(user);
+        try {
+            this.logger.log(`Updating high score for ${username}: ${score}`);
+            const user = await this.findByUsername(username);
+            if (!user) {
+                this.logger.warn(`User not found for high score update: ${username}`);
+                throw new common_1.NotFoundException(`User ${username} not found`);
+            }
+            if (score > user.highScore) {
+                user.highScore = score;
+                await this.userRepository.save(user);
+                this.logger.log(`High score updated for ${username}: ${score}`);
+            }
+            else {
+                this.logger.log(`Score ${score} not higher than current high score ${user.highScore}`);
+            }
+        }
+        catch (error) {
+            this.logger.error(`Error updating high score: ${error.message}`);
+            throw error;
+        }
+    }
+    async getTopScores(limit = 10) {
+        try {
+            return await this.userRepository.find({
+                order: { highScore: 'DESC' },
+                take: limit,
+                select: ['id', 'username', 'highScore', 'createdAt']
+            });
+        }
+        catch (error) {
+            this.logger.error(`Error getting top scores: ${error.message}`);
+            return [];
         }
     }
 };

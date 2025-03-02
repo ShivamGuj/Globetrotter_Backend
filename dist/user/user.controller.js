@@ -26,37 +26,57 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserController = void 0;
 const common_1 = require("@nestjs/common");
 const user_service_1 = require("./user.service");
+const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
 let UserController = class UserController {
     constructor(userService) {
         this.userService = userService;
     }
-    async findOne(username) {
-        const user = await this.userService.findByUsername(username);
-        if (user) {
-            const { password } = user, result = __rest(user, ["password"]);
-            return result;
-        }
-        return null;
+    async create(createUserDto) {
+        return this.userService.create(createUserDto.username, createUserDto.password);
     }
-    getProfile(username) {
+    getProfile(req) {
+        const _a = req.user, { password } = _a, user = __rest(_a, ["password"]);
+        return user;
+    }
+    findOne(username) {
         return this.userService.findByUsername(username);
+    }
+    async updateScore(username, body) {
+        await this.userService.updateHighScore(username, body.score);
+        return { success: true };
     }
 };
 exports.UserController = UserController;
+__decorate([
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UserController.prototype, "create", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)('profile'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], UserController.prototype, "getProfile", null);
 __decorate([
     (0, common_1.Get)(':username'),
     __param(0, (0, common_1.Param)('username')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], UserController.prototype, "findOne", null);
 __decorate([
-    (0, common_1.Get)('profile/:username'),
+    (0, common_1.Post)(':username/score'),
     __param(0, (0, common_1.Param)('username')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], UserController.prototype, "getProfile", null);
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], UserController.prototype, "updateScore", null);
 exports.UserController = UserController = __decorate([
     (0, common_1.Controller)('users'),
     __metadata("design:paramtypes", [user_service_1.UserService])

@@ -51,6 +51,14 @@ async function bootstrap() {
                 ) THEN
                     ALTER TABLE "user" ADD COLUMN "highScore" float DEFAULT 0;
                 END IF;
+
+                -- Add email column to avoid errors if code references it but DB doesn't have it
+                IF NOT EXISTS (
+                    SELECT FROM information_schema.columns 
+                    WHERE table_name = 'user' AND column_name = 'email'
+                ) THEN
+                    ALTER TABLE "user" ADD COLUMN "email" VARCHAR(255) NULL;
+                END IF;
             END
             $$;
           `).catch(err => {
@@ -66,7 +74,7 @@ async function bootstrap() {
         catch (dbError) {
             logger.warn('Database initialization: ' + dbError.message);
         }
-        const port = process.env.PORT || 3001;
+        const port = 5001;
         await app.listen(port);
         logger.log(`Application successfully started on port ${port}`);
     }

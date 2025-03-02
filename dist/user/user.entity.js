@@ -27,25 +27,17 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "password", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", String)
-], User.prototype, "email", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ type: 'float', default: 0, nullable: true }),
+    (0, typeorm_1.Column)({ type: 'float', default: 0, name: 'highscore' }),
     __metadata("design:type", Number)
 ], User.prototype, "highScore", void 0);
 __decorate([
-    (0, typeorm_1.CreateDateColumn)(),
+    (0, typeorm_1.CreateDateColumn)({ name: 'created_at' }),
     __metadata("design:type", Date)
 ], User.prototype, "createdAt", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true, default: 0, name: 'correct_answers' }),
-    __metadata("design:type", Number)
-], User.prototype, "correctAnswers", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ nullable: true, default: 0, name: 'incorrect_answers' }),
-    __metadata("design:type", Number)
-], User.prototype, "incorrectAnswers", void 0);
+    (0, typeorm_1.UpdateDateColumn)({ name: 'updated_at' }),
+    __metadata("design:type", Date)
+], User.prototype, "updatedAt", void 0);
 exports.User = User = __decorate([
     (0, typeorm_1.Entity)()
 ], User);

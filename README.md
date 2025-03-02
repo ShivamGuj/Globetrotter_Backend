@@ -32,3 +32,14 @@ The application uses two main data files:
 
 1. `destinations.json` - Contains information about destinations, clues, and fun facts
 2. `users.json` - Stores user profiles and scores (created automatically)
+
+## Database Migrations
+
+If you encounter database schema issues like missing columns, you can fix them by running:
+
+```bash
+# Run the schema fix script
+npm run fix-schema
+```
+
+This will add any missing columns to your database tables.

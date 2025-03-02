@@ -12,16 +12,12 @@ const typeorm_1 = require("@nestjs/typeorm");
 const config_1 = require("@nestjs/config");
 const user_module_1 = require("./user/user.module");
 const auth_module_1 = require("./auth/auth.module");
-const city_controller_1 = require("./controllers/city.controller");
-const city_service_1 = require("./services/city.service");
+const invitations_module_1 = require("./invitations/invitations.module");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
-const cities_controller_1 = require("./cities/cities.controller");
-const cities_service_1 = require("./cities/cities.service");
-const database_module_1 = require("./database/database.module");
-const test_module_1 = require("./test/test.module");
-const invitations_module_1 = require("./invitations/invitations.module");
 let AppModule = class AppModule {
+    configure(consumer) {
+    }
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
@@ -34,20 +30,9 @@ exports.AppModule = AppModule = __decorate([
                 imports: [config_1.ConfigModule],
                 inject: [config_1.ConfigService],
                 useFactory: (configService) => {
-                    const useSqlite = configService.get('USE_SQLITE') === 'true';
-                    if (useSqlite) {
-                        console.log('Using SQLite database');
-                        return {
-                            type: 'sqlite',
-                            database: 'db.sqlite',
-                            entities: [__dirname + '/**/*.entity{.ts,.js}'],
-                            synchronize: true,
-                            autoLoadEntities: true,
-                        };
-                    }
                     const dbUrl = configService.get('DB_URL');
                     if (dbUrl) {
-                        console.log('Using PostgreSQL database with connection URL');
+                        console.log('Using PostgreSQL with connection URL');
                         return {
                             type: 'postgres',
                             url: dbUrl,
@@ -58,7 +43,7 @@ exports.AppModule = AppModule = __decorate([
                             ssl: { rejectUnauthorized: false },
                         };
                     }
-                    console.log('Using PostgreSQL database with individual parameters');
+                    console.log('Using PostgreSQL with individual parameters');
                     return {
                         type: 'postgres',
                         host: configService.get('DB_HOST'),
@@ -74,14 +59,12 @@ exports.AppModule = AppModule = __decorate([
                     };
                 },
             }),
-            database_module_1.DatabaseModule,
             user_module_1.UserModule,
             auth_module_1.AuthModule,
-            test_module_1.TestModule,
             invitations_module_1.InvitationsModule,
         ],
-        controllers: [city_controller_1.CityController, app_controller_1.AppController, cities_controller_1.CitiesController],
-        providers: [city_service_1.CityService, app_service_1.AppService, cities_service_1.CitiesService],
+        controllers: [app_controller_1.AppController],
+        providers: [app_service_1.AppService],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

@@ -29,29 +29,71 @@ let AuthService = class AuthService {
     constructor(userService, jwtService) {
         this.userService = userService;
         this.jwtService = jwtService;
+        this.logger = new common_1.Logger('AuthService');
     }
     async validateUser(username, pass) {
-        const user = await this.userService.findByUsername(username);
-        if (user && await bcrypt.compare(pass, user.password)) {
-            const { password } = user, result = __rest(user, ["password"]);
-            return result;
+        try {
+            this.logger.log(`Attempting to validate user: ${username}`);
+            const user = await this.userService.findByUsername(username);
+            if (!user) {
+                this.logger.warn(`User not found: ${username}`);
+                return null;
+            }
+            if (!user.password) {
+                this.logger.warn(`User ${username} has no password set`);
+                return null;
+            }
+            try {
+                const isMatch = await bcrypt.compare(pass, user.password);
+                if (isMatch) {
+                    this.logger.log(`User ${username} successfully validated`);
+                    const { password } = user, result = __rest(user, ["password"]);
+                    return result;
+                }
+                else {
+                    this.logger.warn(`Password mismatch for user: ${username}`);
+                    return null;
+                }
+            }
+            catch (bcryptError) {
+                this.logger.error(`bcrypt error: ${bcryptError.message}`);
+                return null;
+            }
         }
-        return null;
+        catch (error) {
+            this.logger.error(`Error validating user: ${error.message}`);
+            return null;
+        }
     }
     async login(user) {
-        const payload = { username: user.username, sub: user.id };
-        return {
-            access_token: this.jwtService.sign(payload),
-            user: {
-                id: user.id,
+        try {
+            const payload = {
                 username: user.username,
-            },
-        };
+                sub: user.id
+            };
+            const token = this.jwtService.sign(payload);
+            this.logger.log(`Generated token for user: ${user.username}`);
+            return {
+                access_token: token,
+                userId: user.id,
+                username: user.username,
+            };
+        }
+        catch (error) {
+            this.logger.error(`Error in login: ${error.message}`);
+            throw new common_1.UnauthorizedException('Login failed');
+        }
     }
     async register(username, password) {
-        const newUser = await this.userService.create(username, password);
-        const { password: _ } = newUser, result = __rest(newUser, ["password"]);
-        return result;
+        try {
+            const newUser = await this.userService.create(username, password);
+            const { password: _ } = newUser, result = __rest(newUser, ["password"]);
+            return result;
+        }
+        catch (error) {
+            this.logger.error(`Registration error: ${error.message}`);
+            throw error;
+        }
     }
 };
 exports.AuthService = AuthService;

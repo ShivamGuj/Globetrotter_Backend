@@ -1,13 +1,12 @@
 import { AuthService } from './auth.service';
 export declare class AuthController {
     private authService;
+    private logger;
     constructor(authService: AuthService);
     login(req: any): Promise<{
         access_token: string;
-        user: {
-            id: any;
-            username: any;
-        };
+        userId: any;
+        username: any;
     }>;
     register(body: {
         username: string;
@@ -15,11 +14,9 @@ export declare class AuthController {
     }): Promise<{
         id: string;
         username: string;
-        email: string;
         highScore: number;
         createdAt: Date;
-        correctAnswers: number;
-        incorrectAnswers: number;
+        updatedAt: Date;
     }>;
     getProfile(req: any): any;
 }

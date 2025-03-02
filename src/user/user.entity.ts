@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity()
 export class User {
@@ -11,19 +11,12 @@ export class User {
   @Column({ nullable: true })
   password: string;
 
-  @Column({ nullable: true })
-  email: string;
-
-  @Column({ type: 'float', default: 0, nullable: true })
+  @Column({ type: 'float', default: 0, name: 'highscore' })
   highScore: number;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  // Remove any potential conflicting columns
-  @Column({ nullable: true, default: 0, name: 'correct_answers' })
-  correctAnswers: number;
-
-  @Column({ nullable: true, default: 0, name: 'incorrect_answers' })
-  incorrectAnswers: number;
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 }

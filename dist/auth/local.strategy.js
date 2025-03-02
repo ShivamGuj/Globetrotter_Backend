@@ -18,13 +18,22 @@ let LocalStrategy = class LocalStrategy extends (0, passport_1.PassportStrategy)
     constructor(authService) {
         super();
         this.authService = authService;
+        this.logger = new common_1.Logger('LocalStrategy');
     }
     async validate(username, password) {
-        const user = await this.authService.validateUser(username, password);
-        if (!user) {
-            throw new common_1.UnauthorizedException();
+        try {
+            this.logger.log(`Attempting to validate user credentials for: ${username}`);
+            const user = await this.authService.validateUser(username, password);
+            if (!user) {
+                this.logger.warn(`Invalid credentials for user: ${username}`);
+                throw new common_1.UnauthorizedException('Invalid username or password');
+            }
+            return user;
         }
-        return user;
+        catch (error) {
+            this.logger.error(`Error in validate: ${error.message}`);
+            throw new common_1.UnauthorizedException('Authentication failed');
+        }
     }
 };
 exports.LocalStrategy = LocalStrategy;
