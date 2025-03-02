@@ -85,7 +85,7 @@ async function bootstrap() {
       logger.warn('Database initialization: ' + dbError.message);
     }
     
-    const port = 5001;
+    const port = process.env.PORT || 5001;
     await app.listen(port);
     
     logger.log(`Application successfully started on port ${port}`);
