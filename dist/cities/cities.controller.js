@@ -21,7 +21,7 @@ let CitiesController = class CitiesController {
     }
     async generateCities(count) {
         try {
-            if (count <= 0 || count > 50) {
+            if (count <= 0 || count > 100) {
                 throw new common_1.HttpException('Count must be between 1 and 50', common_1.HttpStatus.BAD_REQUEST);
             }
             return this.citiesService.generateCities(count);

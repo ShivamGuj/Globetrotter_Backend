@@ -11,6 +11,7 @@ import { CitiesController } from './cities/cities.controller';
 import { CitiesService } from './cities/cities.service';
 import { DatabaseModule } from './database/database.module';
 import { TestModule } from './test/test.module';
+import { InvitationsModule } from './invitations/invitations.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { TestModule } from './test/test.module';
     UserModule,
     AuthModule,
     TestModule,
+    InvitationsModule,
   ],
   controllers: [CityController, AppController, CitiesController],
   providers: [CityService, AppService, CitiesService],

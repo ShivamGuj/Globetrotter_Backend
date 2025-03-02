@@ -19,6 +19,7 @@ const cities_controller_1 = require("./cities/cities.controller");
 const cities_service_1 = require("./cities/cities.service");
 const database_module_1 = require("./database/database.module");
 const test_module_1 = require("./test/test.module");
+const invitations_module_1 = require("./invitations/invitations.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -32,6 +33,7 @@ exports.AppModule = AppModule = __decorate([
             user_module_1.UserModule,
             auth_module_1.AuthModule,
             test_module_1.TestModule,
+            invitations_module_1.InvitationsModule,
         ],
         controllers: [city_controller_1.CityController, app_controller_1.AppController, cities_controller_1.CitiesController],
         providers: [city_service_1.CityService, app_service_1.AppService, cities_service_1.CitiesService],

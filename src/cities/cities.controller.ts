@@ -8,7 +8,7 @@ export class CitiesController {
   @Get('generate/:count')
   async generateCities(@Param('count', ParseIntPipe) count: number) {
     try {
-      if (count <= 0 || count > 50) {
+      if (count <= 0 || count > 100) {
         throw new HttpException('Count must be between 1 and 50', HttpStatus.BAD_REQUEST);
       }
       return this.citiesService.generateCities(count);
