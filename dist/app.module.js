@@ -33,20 +33,46 @@ exports.AppModule = AppModule = __decorate([
             typeorm_1.TypeOrmModule.forRootAsync({
                 imports: [config_1.ConfigModule],
                 inject: [config_1.ConfigService],
-                useFactory: (configService) => ({
-                    type: 'postgres',
-                    host: configService.get('DB_HOST', 'localhost'),
-                    port: parseInt(configService.get('DB_PORT', '5432')),
-                    username: configService.get('DB_USERNAME', 'postgres'),
-                    password: configService.get('DB_PASSWORD', 'postgres'),
-                    database: configService.get('DB_DATABASE', 'headout'),
-                    entities: [__dirname + '/**/*.entity{.ts,.js}'],
-                    synchronize: false,
-                    logging: true,
-                    migrationsRun: false,
-                    dropSchema: false,
-                    autoLoadEntities: true,
-                }),
+                useFactory: (configService) => {
+                    const useSqlite = configService.get('USE_SQLITE') === 'true';
+                    if (useSqlite) {
+                        console.log('Using SQLite database');
+                        return {
+                            type: 'sqlite',
+                            database: 'db.sqlite',
+                            entities: [__dirname + '/**/*.entity{.ts,.js}'],
+                            synchronize: true,
+                            autoLoadEntities: true,
+                        };
+                    }
+                    const dbUrl = configService.get('DB_URL');
+                    if (dbUrl) {
+                        console.log('Using PostgreSQL database with connection URL');
+                        return {
+                            type: 'postgres',
+                            url: dbUrl,
+                            entities: [__dirname + '/**/*.entity{.ts,.js}'],
+                            synchronize: false,
+                            logging: true,
+                            autoLoadEntities: true,
+                            ssl: { rejectUnauthorized: false },
+                        };
+                    }
+                    console.log('Using PostgreSQL database with individual parameters');
+                    return {
+                        type: 'postgres',
+                        host: configService.get('DB_HOST'),
+                        port: parseInt(configService.get('DB_PORT', '5432')),
+                        username: configService.get('DB_USERNAME'),
+                        password: configService.get('DB_PASSWORD'),
+                        database: configService.get('DB_NAME') || configService.get('DB_DATABASE'),
+                        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+                        synchronize: false,
+                        logging: true,
+                        autoLoadEntities: true,
+                        ssl: { rejectUnauthorized: false },
+                    };
+                },
             }),
             database_module_1.DatabaseModule,
             user_module_1.UserModule,

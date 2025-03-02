@@ -5,4 +5,6 @@ export declare class User {
     email: string;
     highScore: number;
     createdAt: Date;
+    correctAnswers: number;
+    incorrectAnswers: number;
 }

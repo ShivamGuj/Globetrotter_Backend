@@ -18,6 +18,8 @@ export declare class AuthController {
         email: string;
         highScore: number;
         createdAt: Date;
+        correctAnswers: number;
+        incorrectAnswers: number;
     }>;
     getProfile(req: any): any;
 }

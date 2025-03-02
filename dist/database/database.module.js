@@ -20,27 +20,33 @@ exports.DatabaseModule = DatabaseModule = __decorate([
             typeorm_1.TypeOrmModule.forRootAsync({
                 imports: [config_1.ConfigModule],
                 inject: [config_1.ConfigService],
+                name: 'postgres',
                 useFactory: (configService) => {
                     const logger = new common_1.Logger('DatabaseModule');
                     logger.log('Attempting to connect to PostgreSQL database...');
+                    const dbUrl = configService.get('DB_URL');
+                    if (dbUrl) {
+                        logger.log('Using connection URL for PostgreSQL');
+                        return {
+                            name: 'postgres',
+                            type: 'postgres',
+                            url: dbUrl,
+                            entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+                            synchronize: false,
+                            ssl: { rejectUnauthorized: false },
+                        };
+                    }
                     return {
+                        name: 'postgres',
                         type: 'postgres',
-                        host: configService.get('DATABASE_HOST'),
-                        port: configService.get('DATABASE_PORT'),
-                        username: configService.get('DATABASE_USERNAME'),
-                        password: configService.get('DATABASE_PASSWORD'),
-                        database: configService.get('DATABASE_NAME'),
+                        host: configService.get('DB_HOST'),
+                        port: parseInt(configService.get('DB_PORT', '5432')),
+                        username: configService.get('DB_USERNAME'),
+                        password: configService.get('DB_PASSWORD'),
+                        database: configService.get('DB_NAME') || configService.get('DB_DATABASE'),
                         entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-                        synchronize: true,
-                        logging: true,
-                        logger: 'advanced-console',
-                        connectTimeoutMS: 10000,
-                        retryAttempts: 5,
-                        retryDelay: 3000,
-                        autoLoadEntities: true,
-                        ssl: {
-                            rejectUnauthorized: false,
-                        },
+                        synchronize: false,
+                        ssl: { rejectUnauthorized: false },
                     };
                 },
             }),

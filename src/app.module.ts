@@ -22,26 +22,52 @@ import { InvitationsModule } from './invitations/invitations.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get('DB_HOST', 'localhost'),
-        port: parseInt(configService.get('DB_PORT', '5432')),
-        username: configService.get('DB_USERNAME', 'postgres'),
-        password: configService.get('DB_PASSWORD', 'postgres'),
-        database: configService.get('DB_DATABASE', 'headout'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: false, // Disable auto-sync temporarily
-        logging: true,
-        // Add these options to fix the schema migration issue
-        migrationsRun: false,
-        dropSchema: false,
-        // Set to false to avoid automatic schema sync initially
-        // We'll handle the schema sync manually in a safer way
-        autoLoadEntities: true,
-      }),
+      useFactory: (configService: ConfigService) => {
+        const useSqlite = configService.get('USE_SQLITE') === 'true';
+        
+        if (useSqlite) {
+          console.log('Using SQLite database');
+          return {
+            type: 'sqlite',
+            database: 'db.sqlite',
+            entities: [__dirname + '/**/*.entity{.ts,.js}'],
+            synchronize: true,
+            autoLoadEntities: true,
+          };
+        }
+        
+        // Check if we have a database URL (preferred for hosted databases)
+        const dbUrl = configService.get('DB_URL');
+        if (dbUrl) {
+          console.log('Using PostgreSQL database with connection URL');
+          return {
+            type: 'postgres',
+            url: dbUrl,
+            entities: [__dirname + '/**/*.entity{.ts,.js}'],
+            synchronize: false,
+            logging: true,
+            autoLoadEntities: true,
+            ssl: { rejectUnauthorized: false }, // Required for Render and most hosted services
+          };
+        }
+        
+        console.log('Using PostgreSQL database with individual parameters');
+        return {
+          type: 'postgres',
+          host: configService.get('DB_HOST'),
+          port: parseInt(configService.get('DB_PORT', '5432')),
+          username: configService.get('DB_USERNAME'),
+          password: configService.get('DB_PASSWORD'),
+          database: configService.get('DB_NAME') || configService.get('DB_DATABASE'), // Try both parameter names
+          entities: [__dirname + '/**/*.entity{.ts,.js}'],
+          synchronize: false,
+          logging: true,
+          autoLoadEntities: true,
+          ssl: { rejectUnauthorized: false }, // Required for Render and most hosted services
+        };
+      },
     }),
     DatabaseModule, // PostgreSQL connection
-    // Removing the SQLite connection as we're now using PostgreSQL
     UserModule,
     AuthModule,
     TestModule,

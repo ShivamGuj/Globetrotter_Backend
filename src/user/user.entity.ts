@@ -5,10 +5,10 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ unique: true })
   username: string;
 
-  @Column({ nullable: true }) // Keep password nullable for now
+  @Column({ nullable: true })
   password: string;
 
   @Column({ nullable: true })
@@ -20,5 +20,10 @@ export class User {
   @CreateDateColumn()
   createdAt: Date;
 
-  // Add any other columns your user entity has, keeping them nullable
+  // Remove any potential conflicting columns
+  @Column({ nullable: true, default: 0, name: 'correct_answers' })
+  correctAnswers: number;
+
+  @Column({ nullable: true, default: 0, name: 'incorrect_answers' })
+  incorrectAnswers: number;
 }

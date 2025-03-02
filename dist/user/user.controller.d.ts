@@ -8,6 +8,8 @@ export declare class UserController {
         email: string;
         highScore: number;
         createdAt: Date;
+        correctAnswers: number;
+        incorrectAnswers: number;
     }>;
     getProfile(username: string): Promise<import("./user.entity").User>;
 }

@@ -18,5 +18,7 @@ export declare class AuthService {
         email: string;
         highScore: number;
         createdAt: Date;
+        correctAnswers: number;
+        incorrectAnswers: number;
     }>;
 }

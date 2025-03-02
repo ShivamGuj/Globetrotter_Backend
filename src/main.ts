@@ -3,14 +3,26 @@ import { AppModule } from './app.module';
 import { Logger } from '@nestjs/common';
 import { getDataSourceToken } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import * as fs from 'fs';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   
+  // Don't override USE_SQLITE if explicitly set in .env
+  if (process.env.USE_SQLITE === undefined) {
+    const envContent = fs.existsSync('./.env') ? fs.readFileSync('./.env', 'utf8') : '';
+    const hasDbUrl = envContent.includes('DB_URL=');
+    
+    if (!hasDbUrl) {
+      logger.warn('No DB_URL found in .env. Setting USE_SQLITE=true as fallback');
+      process.env.USE_SQLITE = 'true';
+    }
+  }
+
   try {
     const app = await NestFactory.create(AppModule);
     
-    // Enhanced CORS configuration
+    // CORS configuration
     app.enableCors({
       origin: [
         'http://localhost:5173',
@@ -23,76 +35,46 @@ async function bootstrap() {
       credentials: true,
     });
 
-    // Fix database issues with a more direct approach
+    // Database schema fixes (only if we have a connection)
     try {
       const dataSource = app.get(getDataSourceToken());
       
-      logger.log('Database connection established, attempting to fix schema issues');
-      
-      // SOLUTION 1: Make the password column nullable in the database directly
-      await dataSource.query(`
-        ALTER TABLE "user" ALTER COLUMN "password" DROP NOT NULL;
-      `).catch(err => {
-        logger.warn('ALTER TABLE operation failed (might be already nullable): ' + err.message);
-      });
-
-      // SOLUTION 2: Update any null password values
-      await dataSource.query(`
-        UPDATE "user" SET "password" = 'default_password_please_change' 
-        WHERE "password" IS NULL;
-      `).catch(err => {
-        logger.warn('UPDATE operation failed: ' + err.message);
-      });
-
-      // Add highScore column if it doesn't exist
-      await dataSource.query(`
-        DO $$
-        BEGIN
-            IF NOT EXISTS (
-                SELECT FROM information_schema.columns 
-                WHERE table_name = 'user' AND column_name = 'highScore'
-            ) THEN
-                ALTER TABLE "user" ADD COLUMN "highScore" float DEFAULT 0;
-            END IF;
-        END
-        $$;
-      `).catch(err => {
-        logger.warn('Adding highScore column failed: ' + err.message);
-      });
-
-      // SOLUTION 3: If all else fails, recreate the problematic table (CAUTION: data loss risk)
-      // Only run this if you're okay with potential data loss or in development
-      if (process.env.NODE_ENV === 'development') {
+      if (dataSource && dataSource.isInitialized) {
+        logger.log('Database connection established, checking schema');
+        
         try {
-          logger.warn('Attempting drastic fix by dropping and recreating user table');
-          
-          // Back up existing users that have passwords
+          // Apply schema fixes using non-blocking queries that won't fail if things already exist
           await dataSource.query(`
-            CREATE TABLE IF NOT EXISTS user_backup AS
-            SELECT * FROM "user" WHERE "password" IS NOT NULL;
-          `);
-          
-          // Drop and recreate
-          await dataSource.query(`DROP TABLE IF EXISTS "user" CASCADE;`);
-          
-          // Force TypeORM to recreate the table with our entity definition
-          await dataSource.synchronize(true);
-          
-          logger.log('User table recreated successfully');
-          
-          // Restore backed up users if needed
-          // This is commented out because it might not match your new schema
-          // await dataSource.query(`
-          //   INSERT INTO "user" SELECT * FROM user_backup;
-          // `);
-        } catch (err) {
-          logger.error('Failed to recreate table: ' + err.message);
+            DO $$
+            BEGIN
+                -- Make password nullable if it exists
+                IF EXISTS (
+                    SELECT FROM information_schema.columns 
+                    WHERE table_name = 'user' AND column_name = 'password'
+                ) THEN
+                    ALTER TABLE "user" ALTER COLUMN "password" DROP NOT NULL;
+                END IF;
+                
+                -- Add highScore if it doesn't exist
+                IF NOT EXISTS (
+                    SELECT FROM information_schema.columns 
+                    WHERE table_name = 'user' AND column_name = 'highScore'
+                ) THEN
+                    ALTER TABLE "user" ADD COLUMN "highScore" float DEFAULT 0;
+                END IF;
+            END
+            $$;
+          `).catch(err => {
+            logger.warn('Schema modification failed (non-critical): ' + err.message);
+          });
+
+          logger.log('Database schema checks completed');
+        } catch (schemaError) {
+          logger.warn('Schema update error (non-critical): ' + schemaError.message);
         }
       }
-
-      logger.log('Database fixes applied');
     } catch (dbError) {
-      logger.warn('Database initialization error: ' + dbError.message);
+      logger.warn('Database initialization: ' + dbError.message);
     }
     
     const port = process.env.PORT || 3001;
